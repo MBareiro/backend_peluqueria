@@ -1,0 +1,9 @@
+version: 2
+services:
+  - name: web
+    env: python=3.8
+    port: 5000
+    build: .  # Usar el directorio actual
+    command: python app.py
+    steps:
+      - run: pip install -r requirements.txt
