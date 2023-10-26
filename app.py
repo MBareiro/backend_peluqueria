@@ -37,14 +37,14 @@ from controllers.appointment import *
 from controllers.reset_password import *
 
 # Descomentar en pythonanywhere 
-"""
+
 from controllers import usuario_controller
 app.route('/usuarios', methods=['GET'])(usuario_controller.get_usuarios)
 app.route('/usuarios/<id>', methods=['GET'])(usuario_controller.get_usuario)
 app.route('/usuarios/<id>', methods=['DELETE'])(usuario_controller.delete_usuario)
 app.route('/usuarios', methods=['POST'])(usuario_controller.create_usuario)
 app.route('/usuarios/<id>', methods=['PUT'])(usuario_controller.update_usuario)
-"""
+
 
 # programa principal, comentar en pythonanywhere
 if __name__ == '__main__':
