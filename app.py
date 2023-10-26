@@ -21,8 +21,6 @@ migrate = Migrate()
 migrate.init_app(app, db) 
 # Define las rutas utilizando el controlador de usuario
 
-
-
 @app.route('/')
 def hello():
     return jsonify(message='¡Hola mundo!')
@@ -35,14 +33,15 @@ from controllers.reset_password import * """
 
 # Descomentar en pythonanywhere 
 
-from controllers import usuario_controller, horario_controller, appointment_controller, reset_password
+from controllers import usuario_controller
+""" , horario_controller, appointment_controller, reset_password """
 app.route('/usuarios', methods=['GET'])(usuario_controller.get_usuarios)
 app.route('/usuarios/<id>', methods=['GET'])(usuario_controller.get_usuario)
 app.route('/usuarios/<id>', methods=['DELETE'])(usuario_controller.delete_usuario)
 app.route('/usuarios', methods=['POST'])(usuario_controller.create_usuario)
 app.route('/usuarios/<id>', methods=['PUT'])(usuario_controller.update_usuario)
 app.route('/usuarios/login', methods=['POST'])(usuario_controller.login)
-
+""" 
 app.route('/obtener_horario_usuario/<user_id>', methods=['GET'])(horario_controller.obtener_horario_usuario)
 app.route('/guardar_horarios', methods=['POST'])(horario_controller.guardar_horarios)
 
@@ -55,7 +54,7 @@ app.route('/get-specific-appointments/<selectedTime>/<selectedDate>/<peluqueroId
 
 app.route('/forgot-password', methods=['POST'])(reset_password.forgot_password)
 app.route('/reset-password/<token>', methods=['POST'])(reset_password.process_reset_password)
-
+ """
 if __name__ == '__main__':
     # ejecuta el servidor Flask en el puerto 5000
     app.run(host='0.0.0.0')
