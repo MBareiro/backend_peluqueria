@@ -5,6 +5,8 @@ from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
 from flask_login import LoginManager
 
+from models.usuario_model import Usuario
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '7110c8ae51a4b5af97be6534caef90e4bb9bdcb3380af008f90b23a5d1616bf319bc298105da20fe'
 login_manager = LoginManager(app)
@@ -34,8 +36,8 @@ def hello():
 #Comentar en pythonanywhere
 """ from controllers.usuario_controller import *
 from controllers.horario_controller import *
-from controllers.appointment import * """
-from controllers.reset_password import *
+from controllers.appointment import *
+from controllers.reset_password import * """
 
 # Descomentar en pythonanywhere 
 
