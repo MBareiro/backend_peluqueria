@@ -46,9 +46,7 @@ app.route('/usuarios', methods=['POST'])(usuario_controller.create_usuario)
 app.route('/usuarios/<id>', methods=['PUT'])(usuario_controller.update_usuario)
 app.route('/usuarios/login', methods=['POST'])(usuario_controller.login)
 
-# programa principal, comentar en pythonanywhere
-""" 
+
 if __name__ == '__main__':
-     ejecuta el servidor Flask en el puerto 5000
-    app.run(debug=True, port=5000)
- """
+    # ejecuta el servidor Flask en el puerto 5000
+    app.run(host='0.0.0.0')
