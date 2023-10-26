@@ -5,6 +5,8 @@ from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
 from flask_login import LoginManager
 
+from models.usuario_model import Usuario
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '7110c8ae51a4b5af97be6534caef90e4bb9bdcb3380af008f90b23a5d1616bf319bc298105da20fe'
 login_manager = LoginManager(app)
@@ -21,8 +23,8 @@ db = SQLAlchemy(app)
 ma = Marshmallow(app)
 migrate = Migrate()
 migrate.init_app(app, db) 
-# Define las rutas utilizando el controlador de usuario
 
+# Define las rutas utilizando el controlador de usuario
 @login_manager.user_loader
 def load_user(user_id):
     return Usuario.query.get(int(user_id))
@@ -34,8 +36,8 @@ def hello():
 #Comentar en pythonanywhere
 """ from controllers.usuario_controller import *
 from controllers.horario_controller import *
-from controllers.appointment import * """
-from controllers.reset_password import *
+from controllers.appointment import * 
+from controllers.reset_password import * """
 
 # Descomentar en pythonanywhere 
 
@@ -59,6 +61,11 @@ app.route('/get-specific-appointments/<selectedTime>/<selectedDate>/<peluqueroId
 
 app.route('/forgot-password', methods=['POST'])(reset_password.forgot_password)
 app.route('/reset-password/<token>', methods=['POST'])(reset_password.process_reset_password)
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Usuario.query.get(int(user_id))
+
 
 if __name__ == '__main__':
     # ejecuta el servidor Flask en el puerto 5000
