@@ -31,9 +31,9 @@ def hello():
     return jsonify(message='¡Hola mundo!')
 
 #Comentar en pythonanywhere
-from controllers.usuario_controller import *
+""" from controllers.usuario_controller import *
 from controllers.horario_controller import *
-from controllers.appointment import *
+from controllers.appointment import * """
 from controllers.reset_password import *
 
 # Descomentar en pythonanywhere 
@@ -44,8 +44,7 @@ app.route('/usuarios/<id>', methods=['GET'])(usuario_controller.get_usuario)
 app.route('/usuarios/<id>', methods=['DELETE'])(usuario_controller.delete_usuario)
 app.route('/usuarios', methods=['POST'])(usuario_controller.create_usuario)
 app.route('/usuarios/<id>', methods=['PUT'])(usuario_controller.update_usuario)
-
-
+app.route('/usuarios/login', methods=['POST'])(usuario_controller.login)
 # programa principal, comentar en pythonanywhere
 if __name__ == '__main__':
     # ejecuta el servidor Flask en el puerto 5000
