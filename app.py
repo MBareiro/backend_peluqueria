@@ -3,14 +3,10 @@ from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
-from flask_login import LoginManager
-
-from models.usuario_model import Usuario
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '7110c8ae51a4b5af97be6534caef90e4bb9bdcb3380af008f90b23a5d1616bf319bc298105da20fe'
-login_manager = LoginManager(app)
-login_manager.login_view = "login"
+
 CORS(app)
 
 # Configurar la base de datos
@@ -25,9 +21,7 @@ migrate = Migrate()
 migrate.init_app(app, db) 
 # Define las rutas utilizando el controlador de usuario
 
-@login_manager.user_loader
-def load_user(user_id):
-    return Usuario.query.get(int(user_id))
+
 
 @app.route('/')
 def hello():

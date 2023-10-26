@@ -7,11 +7,19 @@ import bcrypt
 from flask_login import login_user
 from flask_login import login_required, logout_user
 from controllers.email_controller import *
+from flask_login import LoginManager
+
+login_manager = LoginManager(app)
+login_manager.login_view = "login"
 
 app.config['UPLOAD_FOLDER'] = '/img'
 
 usuario_schema = UsuarioSchema()
 usuarios_schema = UsuarioSchema(many=True)
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Usuario.query.get(int(user_id))
 
 @app.route('/usuarios/login', methods=['POST'])
 def login():
