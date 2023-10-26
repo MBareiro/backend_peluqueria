@@ -39,7 +39,7 @@ from controllers.reset_password import *
 
 # Descomentar en pythonanywhere 
 
-from controllers import usuario_controller
+from controllers import usuario_controller, horario_controller, appointment_controller
 app.route('/usuarios', methods=['GET'])(usuario_controller.get_usuarios)
 app.route('/usuarios/<id>', methods=['GET'])(usuario_controller.get_usuario)
 app.route('/usuarios/<id>', methods=['DELETE'])(usuario_controller.delete_usuario)
@@ -47,6 +47,15 @@ app.route('/usuarios', methods=['POST'])(usuario_controller.create_usuario)
 app.route('/usuarios/<id>', methods=['PUT'])(usuario_controller.update_usuario)
 app.route('/usuarios/login', methods=['POST'])(usuario_controller.login)
 
+app.route('/obtener_horario_usuario/<user_id>', methods=['GET'])(horario_controller.obtener_horario_usuario)
+app.route('/guardar_horarios', methods=['POST'])(horario_controller.guardar_horarios)
+
+app.route('/get-appointments', methods=['GET'])(appointment_controller.get_appointments)
+app.route('/get-morning-appointments', methods=['GET'])(appointment_controller.get_appointments)
+app.route('/get-selected-appointments/<selectedTime>/<peluqueroId>/<selectedDate>', methods=['GET'])(appointment_controller.get_selected_appointments)
+app.route('/submit-form', methods=['POST'])(appointment_controller.submit_form)
+app.route('/cancel-appointment/<appointment_id>', methods=['DELETE'])(appointment_controller.cancel_appointment)
+app.route('/get-specific-appointments/<selectedTime>/<selectedDate>/<peluqueroId>', methods=['GET'])(appointment_controller.get_specific_appointments)
 
 if __name__ == '__main__':
     # ejecuta el servidor Flask en el puerto 5000
