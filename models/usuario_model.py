@@ -48,7 +48,6 @@ class Usuario(db.Model, UserMixin):
 
     @classmethod
     def verificar_credenciales(cls, email, password):
-        print("Verificar", email, password)
         usuario = cls.query.filter_by(email=email).first()
         if usuario and bcrypt.checkpw(password.encode('utf-8'), usuario.password.encode('utf-8')):
             return usuario
