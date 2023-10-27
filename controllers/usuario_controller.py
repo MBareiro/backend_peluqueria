@@ -62,26 +62,27 @@ def delete_usuario(id):
     db.session.commit()
     return usuario_schema.jsonify(usuario)
 
-
 @app.route('/usuarios', methods=['POST'])
 def create_usuario():
     nombre = request.json['nombre']
     apellido = request.json['apellido']
     direccion = request.json['direccion']
-    email = request.json['email']  # Corregir esta línea
+    email = request.json['email']
     telefono = request.json['telefono']
     role = request.json['role']
 
+    # Genera una contraseña aleatoria
     password = generate_random_password()
-
+    
+    # Hashea la contraseña antes de almacenarla en la base de datos
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-
+    
     new_usuario = Usuario(
         nombre=nombre,
         apellido=apellido,
         direccion=direccion,
         password=hashed_password,
-        email=email,  # Corregir esta línea
+        email=email,
         telefono=telefono,
         role=role
     )
