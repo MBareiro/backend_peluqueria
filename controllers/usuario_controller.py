@@ -25,8 +25,6 @@ def load_user(user_id):
 def login():
     email = request.json.get('email')
     password = request.json.get('password')
-    print(email)
-    print(password)
     if not email or not password:
         return jsonify({'message': 'Por favor, proporciona correo electrónico y contraseña'}), 400
 
@@ -75,7 +73,9 @@ def create_usuario():
     role = request.json['role']
 
     password = generate_random_password()
+
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
     new_usuario = Usuario(
         nombre=nombre,
         apellido=apellido,
@@ -87,6 +87,42 @@ def create_usuario():
     )
      # Enviar un correo electrónico al usuario
     msg = Message('Usuario creado con exito!', sender='tu_email@example.com', recipients=[email])
+    msg.body = f'Su cuenta fue creada con éxito!\n\nEstas son sus credenciales.\nUsuario: {email}\nContraseña: {password}'
+    
+    # Envía el correo electrónico
+    mail.send(msg)
+    db.session.add(new_usuario)
+    db.session.commit()
+    
+    return usuario_schema.jsonify(new_usuario)
+
+@app.route('/usuarios', methods=['POST'])
+def create_usuario():
+    nombre = request.json['nombre']
+    apellido = request.json['apellido']
+    direccion = request.json['direccion']
+    email = request.json['email']
+    telefono = request.json['telefono']
+    role = request.json['role']
+
+    # Genera una contraseña aleatoria
+    password = generate_random_password()
+    
+    # Hashea la contraseña antes de almacenarla en la base de datos
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+    
+    new_usuario = Usuario(
+        nombre=nombre,
+        apellido=apellido,
+        direccion=direccion,
+        password=hashed_password,
+        email=email,
+        telefono=telefono,
+        role=role
+    )
+    
+    # Enviar un correo electrónico al usuario con la contraseña sin hashear
+    msg = Message('Usuario creado con éxito!', sender='tu_email@example.com', recipients=[email])
     msg.body = f'Su cuenta fue creada con éxito!\n\nEstas son sus credenciales.\nUsuario: {email}\nContraseña: {password}'
     
     # Envía el correo electrónico
@@ -185,7 +221,8 @@ def hash_password(password):
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
     return hashed_password
 
+# Genera una contraseña aleatoria sin hashear
 def generate_random_password(length=12):
-    characters = string.ascii_letters + string.digits  # Aquí se eliminan los caracteres de puntuación
+    characters = string.ascii_letters + string.digits
     password = ''.join(secrets.choice(characters) for _ in range(length))
     return password
