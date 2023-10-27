@@ -92,7 +92,7 @@ def create_usuario():
     print(email)
      # Enviar un correo electrónico al usuario
     msg = Message('Confirmación de turno', sender='tu_email@example.com', recipients=[email])
-    msg.body = f'Su cuenta fue creada con éxito!\n\nEstas son sus credenciales.\nUsuario: {email}\nContraseña: {hashed_password}'
+    msg.body = f'Su cuenta fue creada con éxito!\n\nEstas son sus credenciales.\nUsuario: {email}\nContraseña: {password}'
     
     # Envía el correo electrónico
     mail.send(msg)
