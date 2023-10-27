@@ -96,42 +96,6 @@ def create_usuario():
     
     return usuario_schema.jsonify(new_usuario)
 
-@app.route('/usuarios', methods=['POST'])
-def create_usuario():
-    nombre = request.json['nombre']
-    apellido = request.json['apellido']
-    direccion = request.json['direccion']
-    email = request.json['email']
-    telefono = request.json['telefono']
-    role = request.json['role']
-
-    # Genera una contraseña aleatoria
-    password = generate_random_password()
-    
-    # Hashea la contraseña antes de almacenarla en la base de datos
-    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-    
-    new_usuario = Usuario(
-        nombre=nombre,
-        apellido=apellido,
-        direccion=direccion,
-        password=hashed_password,
-        email=email,
-        telefono=telefono,
-        role=role
-    )
-    
-    # Enviar un correo electrónico al usuario con la contraseña sin hashear
-    msg = Message('Usuario creado con éxito!', sender='tu_email@example.com', recipients=[email])
-    msg.body = f'Su cuenta fue creada con éxito!\n\nEstas son sus credenciales.\nUsuario: {email}\nContraseña: {password}'
-    
-    # Envía el correo electrónico
-    mail.send(msg)
-    db.session.add(new_usuario)
-    db.session.commit()
-    
-    return usuario_schema.jsonify(new_usuario)
-
 @app.route('/usuarios/<id>', methods=['PUT'])
 def update_usuario(id):
     # Obtén el usuario actual (puedes implementar tu lógica de autenticación aquí)   
