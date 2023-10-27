@@ -76,7 +76,6 @@ def create_usuario():
 
     password = generate_random_password()
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-
     new_usuario = Usuario(
         nombre=nombre,
         apellido=apellido,
@@ -86,12 +85,8 @@ def create_usuario():
         telefono=telefono,
         role=role
     )
-    # Resto del código para enviar el correo y guardar el usuario en la base de datos
-
-    print(password)
-    print(email)
      # Enviar un correo electrónico al usuario
-    msg = Message('Confirmación de turno', sender='tu_email@example.com', recipients=[email])
+    msg = Message('Usuario creado con exito!', sender='tu_email@example.com', recipients=[email])
     msg.body = f'Su cuenta fue creada con éxito!\n\nEstas son sus credenciales.\nUsuario: {email}\nContraseña: {password}'
     
     # Envía el correo electrónico
@@ -190,8 +185,7 @@ def hash_password(password):
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
     return hashed_password
 
-    
 def generate_random_password(length=12):
-    characters = string.ascii_letters + string.digits + string.punctuation
+    characters = string.ascii_letters + string.digits  # Aquí se eliminan los caracteres de puntuación
     password = ''.join(secrets.choice(characters) for _ in range(length))
     return password
