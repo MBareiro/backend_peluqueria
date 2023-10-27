@@ -88,7 +88,7 @@ def create_usuario():
     )
      # Enviar un correo electrónico al usuario
     msg = Message('Usuario creado con exito!', sender='tu_email@example.com', recipients=[email])
-    msg.body = f'Su cuenta fue creada con éxito!\n\nEstas son sus credenciales.\nUsuario: {email}\nContraseña: {password}'
+    msg.body = f'Su cuenta fue creada con éxito!\n\nEstas son sus credenciales.\nUsuario: {email}\nContraseña: {hashed_password}\n'
     
     # Envía el correo electrónico
     mail.send(msg)
