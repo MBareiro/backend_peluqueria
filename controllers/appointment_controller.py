@@ -48,9 +48,12 @@ def submit_form():
         return jsonify({'message': 'Invalid request, JSON expected'}), 400     
 
     data = request.json
-    # Convert and format the date to the appropriate database format
+   # Obtener y formatear la fecha al formato adecuado
     date_str = data.get('date')
-    date_obj = datetime.fromisoformat(date_str)  # Parse ISO 8601 format
+    date_obj = format_iso_date(date_str)
+
+    if date_obj is None:
+        return jsonify({'message': 'Fecha y hora no válidas'}), 400
 
     first_name = data.get('firstName')
     last_name = data.get('lastName')
@@ -88,6 +91,13 @@ def submit_form():
     mail.send(msg)
     return jsonify({'message': 'Form submitted successfully'}), 200
 
+def format_iso_date(date_str):
+    try:
+        date_obj = datetime.fromisoformat(date_str)
+        return date_obj
+    except ValueError:
+        return None
+        
 @app.route('/cancel-appointment/<appointment_id>', methods=['DELETE'])
 def cancel_appointment(appointment_id):
     appointment = Appointment.query.get(appointment_id)
