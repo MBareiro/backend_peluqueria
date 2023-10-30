@@ -7,6 +7,8 @@ from controllers.email_controller import *
 from flask import Flask, request, render_template
 from datetime import datetime
 
+import parser
+
 """ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///horarios.db' """
 
 appointment_schema = AppointmentSchema()
@@ -93,7 +95,7 @@ def submit_form():
 
 def format_iso_date(date_str):
     try:
-        date_obj = datetime.fromisoformat(date_str)
+        date_obj = parser.parse(date_str)
         return date_obj
     except ValueError:
         return None
