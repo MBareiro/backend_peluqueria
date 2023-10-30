@@ -35,7 +35,7 @@ def get_selected_appointments(selectedTime, peluqueroId, selectedDate):
     # Filtrar los turnos según el tiempo seleccionado (mañana o tarde)
     filtered_appointments = Appointment.query.filter_by(schedule=selectedTime, peluquero=peluqueroId, date=selectedDate)
     # Ordena los turnos según la columna selectedRadio en orden descendente
-    filtered_appointments = filtered_appointments.order_by(desc(Appointment.selectedRadio))  # Corrección: usar 'desc' para ordenar descendente
+    filtered_appointments = filtered_appointments.order_by(asc(Appointment.selectedRadio))  # Corrección: usar 'desc' para ordenar descendente
     filtered_appointments = filtered_appointments.all()
     filtered_appointments_serialized = appointment_schema.dump(filtered_appointments)
     return jsonify(filtered_appointments_serialized), 200
@@ -79,9 +79,9 @@ def submit_form():
 
     appointment_id = new_submission.id  # Obtén el ID del turno recién registrado
     cancel_url = f'http://localhost:4200/cancel-appointment/{appointment_id}'
-
+    """  cancel_url = f'https://turnopro-frontend.web.app/cancel-appointment/{appointment_id}' """
     # Enviar un correo electrónico al usuario
-    msg = Message('Confirmación de turno', sender='tu_email@example.com', recipients=[email])
+    msg = Message('Turno registrado!', sender='tu_email@example.com', recipients=[email])
     msg.body = f'Tu turno ha sido registrado para el {formatted_date} a las {selectedRadio}. Si deseas cancelar tu turno, haz clic en el siguiente enlace: {cancel_url}'
     
     # Envía el correo electrónico
@@ -114,7 +114,7 @@ def get_specific_appointments(selectedTime, selectedDate, peluqueroId):
     filtered_appointments = Appointment.query.filter_by(schedule=selectedTime, peluquero=peluqueroId, date=formatted_selected_date)
 
     # Ordenar los turnos según la columna selectedRadio en orden descendente
-    filtered_appointments = filtered_appointments.order_by(desc(Appointment.selectedRadio))
+    filtered_appointments = filtered_appointments.order_by(asc(Appointment.selectedRadio))
 
     # Seleccionar solo el campo 'selectedRadio' de los turnos
     filtered_appointments = filtered_appointments.with_entities(Appointment.selectedRadio).all()
