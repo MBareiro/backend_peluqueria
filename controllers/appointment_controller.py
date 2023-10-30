@@ -78,8 +78,8 @@ def submit_form():
     db.session.commit()
 
     appointment_id = new_submission.id  # Obtén el ID del turno recién registrado
-    cancel_url = f'http://localhost:4200/cancel-appointment/{appointment_id}'
-    """  cancel_url = f'https://turnopro-frontend.web.app/cancel-appointment/{appointment_id}' """
+    """ cancel_url = f'http://localhost:4200/cancel-appointment/{appointment_id}' """
+    cancel_url = f'https://turnopro-frontend.web.app/cancel-appointment/{appointment_id}'
     # Enviar un correo electrónico al usuario
     msg = Message('Turno registrado!', sender='tu_email@example.com', recipients=[email])
     msg.body = f'Tu turno ha sido registrado para el <b>{formatted_date}</b> a las {selectedRadio}. Si deseas cancelar tu turno, haz clic en el siguiente enlace: {cancel_url}'
