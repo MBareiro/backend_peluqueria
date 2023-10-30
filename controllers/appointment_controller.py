@@ -6,8 +6,7 @@ from datetime import datetime
 from controllers.email_controller import *
 from flask import Flask, request, render_template
 from datetime import datetime
-
-import parser
+from dateutil import parser
 
 """ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///horarios.db' """
 
