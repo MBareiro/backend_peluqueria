@@ -7,18 +7,24 @@ import bcrypt
 from flask_login import login_user
 from flask_login import login_required, logout_user
 from controllers.email_controller import *
+from flask_login import LoginManager
+
+login_manager = LoginManager(app)
+login_manager.login_view = "login"
 
 app.config['UPLOAD_FOLDER'] = '/img'
 
 usuario_schema = UsuarioSchema()
 usuarios_schema = UsuarioSchema(many=True)
 
+@login_manager.user_loader
+def load_user(user_id):
+    return Usuario.query.get(int(user_id))
+
 @app.route('/usuarios/login', methods=['POST'])
 def login():
     email = request.json.get('email')
     password = request.json.get('password')
-    print(email)
-    print(password)
     if not email or not password:
         return jsonify({'message': 'Por favor, proporciona correo electrónico y contraseña'}), 400
 
@@ -56,32 +62,45 @@ def delete_usuario(id):
     db.session.commit()
     return usuario_schema.jsonify(usuario)
 
-
 @app.route('/usuarios', methods=['POST'])
 def create_usuario():
     nombre = request.json['nombre']
     apellido = request.json['apellido']
     direccion = request.json['direccion']
-    email = request.json['email']  # Corregir esta línea
+    email = request.json['email']
     telefono = request.json['telefono']
     role = request.json['role']
 
+    # Genera una contraseña aleatoria
     password = generate_random_password()
+    
+    # Hashea la contraseña antes de almacenarla en la base de datos
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+<<<<<<< HEAD
     # Convierte la contraseña en una cadena de texto
     hashed_password_str = hashed_password.decode('utf-8')
+=======
+    
+>>>>>>> 8b962ee3d219107dc087eb28f97c109501f38b3f
     new_usuario = Usuario(
         nombre=nombre,
         apellido=apellido,
         direccion=direccion,
         password=hashed_password,
-        email=email,  # Corregir esta línea
+        email=email,
         telefono=telefono,
         role=role
+<<<<<<< HEAD
     )       
      # Enviar un correo electrónico al usuario
     msg = Message('Cuenta fue creada con éxito!', sender='tu_email@example.com', recipients=[email])
     msg.body = f'Estas son sus credenciales.\nUsuario: {email}\nContraseña: {hashed_password_str}'
+=======
+    )
+     # Enviar un correo electrónico al usuario
+    msg = Message('Usuario creado con exito!', sender='tu_email@example.com', recipients=[email])
+    msg.body = f'Su cuenta fue creada con éxito!\n\nEstas son sus credenciales.\nUsuario: {email}\nContraseña: {hashed_password}\n'
+>>>>>>> 8b962ee3d219107dc087eb28f97c109501f38b3f
     
     # Envía el correo electrónico
     mail.send(msg)
@@ -179,8 +198,14 @@ def hash_password(password):
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
     return hashed_password
 
+<<<<<<< HEAD
     
 def generate_random_password(length=10):
     characters = string.ascii_letters + string.digits + string.punctuation
+=======
+# Genera una contraseña aleatoria sin hashear
+def generate_random_password(length=12):
+    characters = string.ascii_letters + string.digits
+>>>>>>> 8b962ee3d219107dc087eb28f97c109501f38b3f
     password = ''.join(secrets.choice(characters) for _ in range(length))
     return password

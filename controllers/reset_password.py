@@ -1,13 +1,10 @@
-import mailbox
 from app import app, db
-from models.usuario_model import Usuario, UsuarioSchema
-from flask import Flask, request, jsonify
-from sqlalchemy import desc, asc  # Importa desc para el ordenamiento descendente
+from models.usuario_model import Usuario
+from flask import request, jsonify
 from datetime import datetime, timedelta
 import secrets
 from flask_mail import Message # Asegúrate de que hayas configurado Flask-Mail previamente
-from flask import redirect
-from flask_mail import Mail, Message
+from flask_mail import Message
 from controllers.email_controller import *
 import bcrypt
 """ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///horarios.db' """
