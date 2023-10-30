@@ -29,6 +29,7 @@ def forgot_password():
         sender = 'noreply@example.com'
         recipients = [email]
         reset_link = f'https://turnopro-frontend.web.app/reset-password/{reset_token}'  # Reemplaza con tu dominio
+        """ reset_link = f'http://localhost:4200/{reset_token}'  """ # Reemplaza con tu dominio
         message = Message(subject=subject, sender=sender, recipients=recipients)
         message.body = f'Para restablecer tu contraseña, sigue este enlace: {reset_link}'        
         try:
