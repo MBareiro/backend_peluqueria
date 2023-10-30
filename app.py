@@ -13,8 +13,8 @@ CORS(app)
 
 # Configurar la base de datos
 #app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://mbdev:Pruebas132@mbdev.mysql.pythonanywhere-services.com/mbdev$default'
-#app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:root@localhost/proyecto'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://uflypegeltymsqap:aaKDW1KAY039djDeFOFy@b1jw7nqavnggowznnlg4-mysql.services.clever-cloud.com:3306/b1jw7nqavnggowznnlg4'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:root@localhost/proyecto'
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://uflypegeltymsqap:aaKDW1KAY039djDeFOFy@b1jw7nqavnggowznnlg4-mysql.services.clever-cloud.com:3306/b1jw7nqavnggowznnlg4'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)

@@ -82,7 +82,7 @@ def submit_form():
     """  cancel_url = f'https://turnopro-frontend.web.app/cancel-appointment/{appointment_id}' """
     # Enviar un correo electrónico al usuario
     msg = Message('Turno registrado!', sender='tu_email@example.com', recipients=[email])
-    msg.body = f'Tu turno ha sido registrado para el {formatted_date} a las {selectedRadio}. Si deseas cancelar tu turno, haz clic en el siguiente enlace: {cancel_url}'
+    msg.body = f'Tu turno ha sido registrado para el <b>{formatted_date}</b> a las {selectedRadio}. Si deseas cancelar tu turno, haz clic en el siguiente enlace: {cancel_url}'
     
     # Envía el correo electrónico
     mail.send(msg)
