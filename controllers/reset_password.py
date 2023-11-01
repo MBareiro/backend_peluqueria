@@ -29,12 +29,12 @@ def forgot_password():
         sender = 'noreply@example.com'
         recipients = [email]
         reset_link = f'https://turnopro-frontend.web.app/reset-password/{reset_token}'  # Reemplaza con tu dominio
-        """ reset_link = f'http://localhost:4200/{reset_token}'  """ # Reemplaza con tu dominio
+        """ reset_link = f'http://localhost:4200/reset-password/{reset_token}' """  # Reemplaza con tu dominio
         message = Message(subject=subject, sender=sender, recipients=recipients)
         message.body = f'Para restablecer tu contraseña, sigue este enlace: {reset_link}'        
         try:
             mail.send(message)
-            return jsonify({'message': 'Se ha enviado un correo electrónico con las instrucciones para restablecer la contraseña.'}), 200
+            return jsonify({'message': '*Se ha enviado un correo electrónico con las instrucciones para restablecer la contraseña.'}), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     else:
@@ -64,6 +64,6 @@ def process_reset_password(token):
         user.reset_password_token = None
         user.reset_password_expiration = None
         db.session.commit()
-        return 'Contraseña restablecida con éxito. Puedes iniciar sesión con tu nueva contraseña.'
+        return jsonify({'message': 'Contraseña restablecida con éxito. Puedes iniciar sesión con tu nueva contraseña.'}), 200
     else:
-        return 'Token inválido o expirado. Por favor, solicita otro enlace de restablecimiento de contraseña.'
+        return jsonify({'message': 'Token inválido o expirado. Por favor, solicita otro enlace de restablecimiento de contraseña.'}), 500
