@@ -52,7 +52,7 @@ app.route('/guardar_horarios', methods=['POST'])(horario_controller.guardar_hora
 app.route('/get-appointments', methods=['GET'])(appointment_controller.get_appointments)
 app.route('/get-morning-appointments', methods=['GET'])(appointment_controller.get_appointments)
 app.route('/get-selected-appointments/<selectedTime>/<peluqueroId>/<selectedDate>', methods=['GET'])(appointment_controller.get_selected_appointments)
-app.route('/submit-form', methods=['POST'])(appointment_controller.submit_form)
+app.route('/confirm-appointment', methods=['POST'])(appointment_controller.confirm_appointment)
 app.route('/cancel-appointment/<appointment_id>', methods=['DELETE'])(appointment_controller.cancel_appointment)
 app.route('/get-specific-appointments/<selectedTime>/<selectedDate>/<peluqueroId>', methods=['GET'])(appointment_controller.get_specific_appointments)
 
