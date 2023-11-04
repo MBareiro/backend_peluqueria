@@ -140,17 +140,6 @@ def format_iso_date(date_str):
 def cancel_appointment(appointment_id):
     appointment = Appointment.query.get(appointment_id)
     if appointment:
-        db.session.delete(appointment)
-        db.session.commit()
-        return jsonify({'message': 'Turno cancelado exitosamente'}), 200
-    else:
-        return jsonify({'message': 'No se encontró el turno'}), 404
-        from datetime import datetime, timedelta
-
-@app.route('/cancel-appointment/<appointment_id>', methods=['DELETE'])
-def cancel_appointment(appointment_id):
-    appointment = Appointment.query.get(appointment_id)
-    if appointment:
         # Obtén la fecha actual
         current_date = datetime.now().date()
 
