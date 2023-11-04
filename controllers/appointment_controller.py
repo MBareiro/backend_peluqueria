@@ -123,7 +123,6 @@ def send_confirmation_code():
     confirmation_codes[email] = confirmation_code
     msg = Message('Código de confirmación', sender='tu_email@example.com', recipients=[email])
     msg.body = f'Tu código de confirmación es: {confirmation_code}'
-
     # Envía el correo electrónico con el código de confirmación
     mail.send(msg)
     return jsonify({'message': 'Código de confirmación enviado con éxito'}), 200
@@ -142,15 +141,14 @@ def cancel_appointment(appointment_id):
     if appointment:
         # Obtén la fecha actual
         current_date = datetime.now().date()
-
         # Convierte la fecha del turno al formato datetime
         appointment_date = parse(appointment.date).date()
-
         # Calcula la diferencia de días entre la fecha actual y la fecha del turno
         days_difference = (appointment_date - current_date).days
-
+        print(days_difference)
         # Verifica si la diferencia de días es mayor o igual a 1 (un día de anticipación)
-        if days_difference >= 1:
+        if days_difference > 1:
+            print("netro")
             db.session.delete(appointment)
             db.session.commit()
             return jsonify({'message': 'Turno cancelado exitosamente'}), 200
@@ -158,9 +156,7 @@ def cancel_appointment(appointment_id):
             return jsonify({'message': 'No se puede cancelar el turno con menos de un día de anticipación'}), 400
     else:
         return jsonify({'message': 'No se encontró el turno'}), 404
-
  
-
 @app.route('/get-specific-appointments/<selectedTime>/<selectedDate>/<peluqueroId>', methods=['GET'])
 def get_specific_appointments(selectedTime, selectedDate, peluqueroId):
     # Convertir la fecha recibida a un objeto datetime
