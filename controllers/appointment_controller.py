@@ -8,6 +8,7 @@ from controllers.email_controller import *
 from flask import Flask, request, render_template
 from datetime import datetime
 from dateutil import parser
+from dateutil.parser import parse
 import requests
 """ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///horarios.db' """
 
@@ -68,7 +69,6 @@ def confirm_appointment():
 
         if date_obj is None:
             return jsonify({'message': 'Fecha y hora no válidas'}), 400
-        print("Aca debe entraraa")
         first_name = data.get('firstName')
         last_name = data.get('lastName')
         email = data.get('email')
@@ -99,7 +99,7 @@ def confirm_appointment():
         cancel_url = f'https://turnopro-frontend.web.app/cancel-appointment/{appointment_id}'
         # Enviar un correo electrónico al usuario
         msg = Message('Turno registrado!', sender='tu_email@example.com', recipients=[email])
-        msg.body = f'Tu turno ha sido registrado para el {formatted_date} a las {selectedRadio}. Si deseas cancelar tu turno, haz clic en el siguiente enlace: {cancel_url}'
+        msg.body = f'Tu turno ha sido registrado para el {formatted_date} a las {selectedRadio}. Si deseas cancelar tu turno (hasta un día antes del turno programado), haz clic en el siguiente enlace: {cancel_url}'
         
         # Envía el correo electrónico
         mail.send(msg)
@@ -145,6 +145,31 @@ def cancel_appointment(appointment_id):
         return jsonify({'message': 'Turno cancelado exitosamente'}), 200
     else:
         return jsonify({'message': 'No se encontró el turno'}), 404
+        from datetime import datetime, timedelta
+
+@app.route('/cancel-appointment/<appointment_id>', methods=['DELETE'])
+def cancel_appointment(appointment_id):
+    appointment = Appointment.query.get(appointment_id)
+    if appointment:
+        # Obtén la fecha actual
+        current_date = datetime.now().date()
+
+        # Convierte la fecha del turno al formato datetime
+        appointment_date = parse(appointment.date).date()
+
+        # Calcula la diferencia de días entre la fecha actual y la fecha del turno
+        days_difference = (appointment_date - current_date).days
+
+        # Verifica si la diferencia de días es mayor o igual a 1 (un día de anticipación)
+        if days_difference >= 1:
+            db.session.delete(appointment)
+            db.session.commit()
+            return jsonify({'message': 'Turno cancelado exitosamente'}), 200
+        else:
+            return jsonify({'message': 'No se puede cancelar el turno con menos de un día de anticipación'}), 400
+    else:
+        return jsonify({'message': 'No se encontró el turno'}), 404
+
  
 
 @app.route('/get-specific-appointments/<selectedTime>/<selectedDate>/<peluqueroId>', methods=['GET'])
