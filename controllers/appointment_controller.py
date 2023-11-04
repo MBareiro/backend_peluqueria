@@ -44,70 +44,69 @@ def get_selected_appointments(selectedTime, peluqueroId, selectedDate):
     filtered_appointments_serialized = appointment_schema.dump(filtered_appointments)
     return jsonify(filtered_appointments_serialized), 200
     
+# Ruta para confirmar el código de confirmación
 @app.route('/confirm-appointment', methods=['POST'])
 def confirm_appointment():
     if not request.is_json:
         return jsonify({'message': 'Invalid request, JSON expected'}), 400     
 
     data = request.json
-    print(data)
     email = data.get('email')
-    confirmation_code = data.get('code')  # Obtén el código de confirmación del cuerpo de la solicitud    
-    # Verifica la validez del código de confirmación
-        # Verifica la validez del código de confirmación    
+    confirmation_code = data.get('code')
+
     if email in confirmation_codes and confirmation_codes[email] == confirmation_code:
-        
+        print("---------------------------")
         # El código de confirmación es válido, procede a registrar el turno
-        # También puedes eliminar el código de confirmación de la estructura de datos si lo deseas
-        del confirmation_codes[email]
-        # Luego, realiza el proceso de registro del turno
-        # Obtener y formatear la fecha al formato adecuado
-
-        data = data.get('formData')
-        date_str = data.get('date')
-        date_obj = format_iso_date(date_str)
-
-        if date_obj is None:
-            return jsonify({'message': 'Fecha y hora no válidas'}), 400
-        first_name = data.get('firstName')
-        last_name = data.get('lastName')
-        email = data.get('email')
-        phone_number = data.get('phoneNumber')
-        peluquero = data.get('peluquero')   
-        formatted_date = date_obj.strftime('%Y-%m-%d')
-        schedule = data.get('schedule')
-        selectedRadio = data.get('selectedRadio')
-    
-        # Create a new FormSubmission instance
-        new_submission = Appointment(
-            first_name=first_name,
-            last_name=last_name,
-            email=email,
-            phone_number=phone_number,
-            peluquero=peluquero,
-            date=formatted_date,  # Use the formatted date
-            schedule=schedule,
-            selectedRadio=selectedRadio
-        )
-
-        # Add and commit to the database
-        db.session.add(new_submission)
-        db.session.commit()
-
-        appointment_id = new_submission.id  # Obtén el ID del turno recién registrado
-        """ cancel_url = f'http://localhost:4200/cancel-appointment/{appointment_id}' """
-        cancel_url = f'https://turnopro-frontend.web.app/cancel-appointment/{appointment_id}'
-        # Enviar un correo electrónico al usuario
-        msg = Message('Turno registrado!', sender='tu_email@example.com', recipients=[email])
-        msg.body = f'Tu turno ha sido registrado para el {formatted_date} a las {selectedRadio}. Si deseas cancelar tu turno (hasta un día antes del turno programado), haz clic en el siguiente enlace: {cancel_url}'
-        
-        # Envía el correo electrónico
-        mail.send(msg)
-        return jsonify({'message': 'Turno confirmado con éxito'}, 200)
+        del confirmation_codes[email]  # Elimina el código de confirmación
+        return jsonify({'message': 'Código de confirmación correcto'}, 200)
     else:
         return jsonify({'message': 'Código de confirmación incorrecto'}, 400)
-      
 
+# Función para crear un turno
+@app.route('/create-appointment', methods=['POST'])
+def create_appointment():
+    if not request.is_json:
+        return jsonify({'message': 'Invalid request, JSON expected'}), 400     
+
+    data = request.json
+    date_str = data.get('date')
+    date_obj = format_iso_date(date_str)
+
+    if date_obj is None:
+        return jsonify({'message': 'Fecha y hora no válidas'}, 400)
+    
+    first_name = data.get('firstName')
+    last_name = data.get('lastName')
+    email = data.get('email')
+    phone_number = data.get('phoneNumber')
+    peluquero = data.get('peluquero')
+    formatted_date = date_obj.strftime('%Y-%m-%d')
+    schedule = data.get('schedule')
+    selectedRadio = data.get('selectedRadio')
+
+    new_submission = Appointment(
+        first_name=first_name,
+        last_name=last_name,
+        email=email,
+        phone_number=phone_number,
+        peluquero=peluquero,
+        date=formatted_date,
+        schedule=schedule,
+        selectedRadio=selectedRadio
+    )
+
+    db.session.add(new_submission)
+    db.session.commit()
+    if(email):
+        appointment_id = new_submission.id
+        cancel_url = f'https://turnopro-frontend.web.app/cancel-appointment/{appointment_id}'    
+        """ cancel_url = f'http://localhost:4200/cancel-appointment/{appointment_id}' """
+        msg = Message('Turno registrado!', sender='tu_email@example.com', recipients=[email])
+        msg.body = f'Tu turno ha sido registrado para el {formatted_date} a las {selectedRadio}. Si deseas cancelar tu turno (hasta un día antes del turno programado), haz clic en el siguiente enlace: {cancel_url}'
+        mail.send(msg)    
+    
+    return jsonify({'message': 'Turno confirmado con éxito'}, 200)
+    
 def generate_confirmation_code():
     return str(random.randint(1000, 9999))
 
