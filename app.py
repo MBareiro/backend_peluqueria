@@ -57,5 +57,5 @@ app.route('/cancel-appointment/<appointment_id>', methods=['DELETE'])(appointmen
 app.route('/get-specific-appointments/<selectedTime>/<selectedDate>/<peluqueroId>', methods=['GET'])(appointment_controller.get_specific_appointments)
 
 if __name__ == '__main__':
-    # ejecuta el servidor Flask en el puerto 5000
+    appointment_controller.schedule_reminders()
     app.run(host='0.0.0.0')

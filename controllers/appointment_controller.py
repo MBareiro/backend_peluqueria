@@ -3,13 +3,14 @@ from app import app, db
 from models.appointment_model import Appointment, AppointmentSchema
 from flask import Flask, request, jsonify
 from sqlalchemy import desc, asc  # Importa desc para el ordenamiento descendente
-from datetime import datetime
 from controllers.email_controller import *
 from flask import Flask, request, render_template
-from datetime import datetime
 from dateutil import parser
 from dateutil.parser import parse
 import requests
+from tenacity import retry, stop_after_attempt, wait_fixed
+from apscheduler.schedulers.background import BackgroundScheduler
+import datetime
 """ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///horarios.db' """
 
 appointment_schema = AppointmentSchema()
@@ -156,8 +157,19 @@ def cancel_appointment(appointment_id):
     else:
         return jsonify({'message': 'No se encontró el turno'}), 404
  
+
+# Configura la estrategia de reintento
+retry_strategy = retry(
+    stop=stop_after_attempt(3),  # Intenta 3 veces como máximo
+    wait=wait_fixed(2)  # Espera 5 segundos entre reintentos
+)
+
 @app.route('/get-specific-appointments/<selectedTime>/<selectedDate>/<peluqueroId>', methods=['GET'])
+@retry_strategy
 def get_specific_appointments(selectedTime, selectedDate, peluqueroId):
+    print(selectedTime)
+    print(selectedDate)
+    print(peluqueroId)
     # Convertir la fecha recibida a un objeto datetime
     try:
         selected_date_obj = datetime.strptime(selectedDate, '%a %b %d %Y %H:%M:%S GMT%z (hora estándar de Argentina)')
@@ -166,17 +178,48 @@ def get_specific_appointments(selectedTime, selectedDate, peluqueroId):
 
     # Formatear la fecha en el mismo formato que tienes en la base de datos
     formatted_selected_date = selected_date_obj.strftime('%Y-%m-%d')
-
     # Filtrar los turnos según el tiempo seleccionado (mañana o tarde) y la fecha
     filtered_appointments = Appointment.query.filter_by(schedule=selectedTime, peluquero=peluqueroId, date=formatted_selected_date)
-
     # Ordenar los turnos según la columna selectedRadio en orden descendente
     filtered_appointments = filtered_appointments.order_by(asc(Appointment.selectedRadio))
-
     # Seleccionar solo el campo 'selectedRadio' de los turnos
     filtered_appointments = filtered_appointments.with_entities(Appointment.selectedRadio).all()
-
     # Serializar los selectedRadios
     filtered_appointments_serialized = [item[0] for item in filtered_appointments]
-
+    print(filtered_appointments_serialized)
     return jsonify(filtered_appointments_serialized), 200
+
+
+# Configura el planificador de tareas de fondo
+scheduler = BackgroundScheduler(daemon=True)
+scheduler.start()
+
+def send_reminders():
+    # Obtén la fecha de mañana
+    tomorrow = datetime.now() + datetime.timedelta(days=1)
+    formatted_date = tomorrow.strftime('%Y-%m-%d')
+
+    # Filtra los turnos que tienen la fecha de mañana
+    tomorrow_appointments = Appointment.query.filter_by(date=formatted_date).all()
+
+    for appointment in tomorrow_appointments:
+        send_reminder_email(appointment)  # Envia un correo de recordatorio para cada turno
+
+    return jsonify({'message': 'Recordatorios enviados con éxito'}), 200
+
+def send_reminder_email(appointment):
+    # Aquí deberías implementar la lógica para enviar un correo de recordatorio al usuario
+    # Puedes utilizar bibliotecas como Flask-Mail o cualquier otro servicio de correo electrónico.
+
+    # Ejemplo usando Flask-Mail
+    msg = Message('Recordatorio de turno', sender='tu_email@example.com', recipients=[appointment.email])
+    msg.body = f'Tu turno está programado para mañana a las {appointment.selectedRadio}. ¡No olvides asistir!'
+    mail.send(msg)
+
+# Programa la tarea para ejecutarse un día antes del turno
+def schedule_reminders():
+    # Calcula la fecha actual
+    today = datetime.datetime.now().date()
+    # Programa la tarea para ejecutarse un día antes
+    reminder_date = today + datetime.timedelta(days=1)
+    scheduler.add_job(send_reminders, 'date', run_date=reminder_date)

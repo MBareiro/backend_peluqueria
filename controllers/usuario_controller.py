@@ -7,7 +7,7 @@ import bcrypt
 from flask_login import login_user
 from flask_login import login_required, logout_user
 from controllers.email_controller import *
-
+from tenacity import retry, stop_after_attempt, wait_fixed
 app.config['UPLOAD_FOLDER'] = '/img'
 
 usuario_schema = UsuarioSchema()
@@ -35,12 +35,22 @@ def logout():
     logout_user()  # Cerrar la sesión del usuario
     return jsonify({'message': 'Sesión cerrada exitosamente'})
 
+# Configura la estrategia de reintento
+retry_strategy = retry(
+    stop=stop_after_attempt(3),  # Intenta 3 veces como máximo
+    wait=wait_fixed(2)  # Espera 5 segundos entre reintentos
+)
 
 @app.route('/usuarios', methods=['GET'])
+@retry_strategy
 def get_usuarios():
-    all_usuarios = Usuario.query.all()
-    result = usuarios_schema.dump(all_usuarios)
-    return jsonify(result)
+    try:
+        all_usuarios = Usuario.query.all()
+        result = usuarios_schema.dump(all_usuarios)
+        return jsonify(result)
+    except Exception as e:
+        # Maneja cualquier excepción que pueda ocurrir aquí
+        return jsonify({"error": str(e)}), 500  # Responde con un error 500 en caso de excepción
 
 
 @app.route('/usuarios/<id>', methods=['GET'])
