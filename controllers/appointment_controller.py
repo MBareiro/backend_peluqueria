@@ -56,7 +56,6 @@ def confirm_appointment():
     confirmation_code = data.get('code')
 
     if email in confirmation_codes and confirmation_codes[email] == confirmation_code:
-        print("---------------------------")
         # El código de confirmación es válido, procede a registrar el turno
         del confirmation_codes[email]  # Elimina el código de confirmación
         return jsonify({'message': 'Código de confirmación correcto'}, 200)
@@ -145,10 +144,8 @@ def cancel_appointment(appointment_id):
         appointment_date = parse(appointment.date).date()
         # Calcula la diferencia de días entre la fecha actual y la fecha del turno
         days_difference = (appointment_date - current_date).days
-        print(days_difference)
         # Verifica si la diferencia de días es mayor o igual a 1 (un día de anticipación)
         if days_difference > 1:
-            print("netro")
             db.session.delete(appointment)
             db.session.commit()
             return jsonify({'message': 'Turno cancelado exitosamente'}), 200
@@ -157,6 +154,46 @@ def cancel_appointment(appointment_id):
     else:
         return jsonify({'message': 'No se encontró el turno'}), 404
  
+@app.route('/cancel-appointments', methods=['DELETE'])
+def cancel_appointments_in_date_range():
+    data = request.get_json()
+    
+    if 'from_date' not in data or 'to_date' not in data or 'peluquero_id' not in data:
+        return jsonify({'message': 'Los campos "from_date", "to_date" y "peluquero_id" son obligatorios'}), 400
+
+    from_date_str = data['from_date']
+    to_date_str = data['to_date']
+    peluquero_id = data['peluquero_id']
+
+    try:
+        from_date = parse(from_date_str).date()
+        to_date = parse(to_date_str).date()
+    except ValueError:
+        return jsonify({'message': 'Las fechas no tienen un formato válido'}), 400
+
+    if from_date > to_date:
+        return jsonify({'message': '"from_date" debe ser anterior a "to_date"'}), 400
+
+    # Obtén la fecha actual
+    current_date = datetime.datetime.now().date()
+    
+    # Consulta los turnos dentro del rango de fechas y del peluquero especificado
+    appointments_to_cancel = Appointment.query.filter(
+        Appointment.date >= from_date,
+        Appointment.date <= to_date,
+        Appointment.peluquero == peluquero_id
+    ).all()
+
+    for appointment in appointments_to_cancel:
+        print(appointment.email)
+        if(appointment.email):
+            # Puedes agregar aquí la lógica para enviar notificaciones por correo electrónico, si es necesario.
+            msg = Message('Notificación de cancelación de turno', sender='tu_email@example.com', recipients=[appointment.email])
+            msg.body = f'Tu turno programado para el {appointment.date} a las {appointment.selectedRadio} ha sido cancelado por razones de fuerza mayor. Disculpe las molestias.'
+            mail.send(msg)
+        db.session.delete(appointment)
+    db.session.commit()
+    return jsonify({'message': 'Turnos del peluquero cancelados exitosamente en el rango de fechas'}), 200
 
 # Configura la estrategia de reintento
 retry_strategy = retry(
@@ -167,12 +204,9 @@ retry_strategy = retry(
 @app.route('/get-specific-appointments/<selectedTime>/<selectedDate>/<peluqueroId>', methods=['GET'])
 @retry_strategy
 def get_specific_appointments(selectedTime, selectedDate, peluqueroId):
-    print(selectedTime)
-    print(selectedDate)
-    print(peluqueroId)
     # Convertir la fecha recibida a un objeto datetime
     try:
-        selected_date_obj = datetime.strptime(selectedDate, '%a %b %d %Y %H:%M:%S GMT%z (hora estándar de Argentina)')
+        selected_date_obj = datetime.datetime.strptime(selectedDate, '%a %b %d %Y %H:%M:%S GMT%z (hora estándar de Argentina)')
     except ValueError:
         return jsonify(message='Invalid date format'), 400
 
@@ -189,14 +223,13 @@ def get_specific_appointments(selectedTime, selectedDate, peluqueroId):
     print(filtered_appointments_serialized)
     return jsonify(filtered_appointments_serialized), 200
 
-
 # Configura el planificador de tareas de fondo
 scheduler = BackgroundScheduler(daemon=True)
 scheduler.start()
 
 def send_reminders():
     # Obtén la fecha de mañana
-    tomorrow = datetime.now() + datetime.timedelta(days=1)
+    tomorrow = datetime.datetime.now() + datetime.timedelta(days=1)
     formatted_date = tomorrow.strftime('%Y-%m-%d')
 
     # Filtra los turnos que tienen la fecha de mañana

@@ -38,7 +38,7 @@ from controllers.reset_password import *
 
 # Descomentar en pythonanywhere 
 
-from controllers import usuario_controller, horario_controller, appointment_controller
+from controllers import usuario_controller, horario_controller, appointment_controller, bloqueo_controller
 app.route('/usuarios', methods=['GET'])(usuario_controller.get_usuarios)
 app.route('/usuarios/<id>', methods=['GET'])(usuario_controller.get_usuario)
 app.route('/usuarios/<id>', methods=['DELETE'])(usuario_controller.delete_usuario)
@@ -55,6 +55,10 @@ app.route('/get-selected-appointments/<selectedTime>/<peluqueroId>/<selectedDate
 app.route('/confirm-appointment', methods=['POST'])(appointment_controller.confirm_appointment)
 app.route('/cancel-appointment/<appointment_id>', methods=['DELETE'])(appointment_controller.cancel_appointment)
 app.route('/get-specific-appointments/<selectedTime>/<selectedDate>/<peluqueroId>', methods=['GET'])(appointment_controller.get_specific_appointments)
+
+app.route('/create-blocked-day-range', methods=['POST'])(bloqueo_controller.create_blocked_day_range)
+app.route('/get-blocked-days', methods=['GET'])(bloqueo_controller.get_blocked_days)
+app.route('/delete-blocked-day', methods=['DELETE'])(bloqueo_controller.delete_blocked_day)
 
 if __name__ == '__main__':
     appointment_controller.schedule_reminders()
