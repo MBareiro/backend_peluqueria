@@ -55,6 +55,7 @@ app.route('/get-selected-appointments/<selectedTime>/<peluqueroId>/<selectedDate
 app.route('/confirm-appointment', methods=['POST'])(appointment_controller.confirm_appointment)
 app.route('/cancel-appointment/<appointment_id>', methods=['DELETE'])(appointment_controller.cancel_appointment)
 app.route('/get-specific-appointments/<selectedTime>/<selectedDate>/<peluqueroId>', methods=['GET'])(appointment_controller.get_specific_appointments)
+app.route('/get-appointment-email/<email>/<selectedDate>/<peluqueroId>', methods=['GET'])(appointment_controller.get_appointment_email)
 
 app.route('/create-blocked-day-range', methods=['POST'])(bloqueo_controller.create_blocked_day_range)
 app.route('/get-blocked-days', methods=['GET'])(bloqueo_controller.get_blocked_days)

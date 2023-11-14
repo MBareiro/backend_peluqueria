@@ -11,6 +11,9 @@ import requests
 from tenacity import retry, stop_after_attempt, wait_fixed
 from apscheduler.schedulers.background import BackgroundScheduler
 import datetime
+# Configura el planificador de tareas de fondo
+scheduler = BackgroundScheduler(daemon=True)
+scheduler.start()
 """ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///horarios.db' """
 
 appointment_schema = AppointmentSchema()
@@ -223,9 +226,26 @@ def get_specific_appointments(selectedTime, selectedDate, peluqueroId):
     print(filtered_appointments_serialized)
     return jsonify(filtered_appointments_serialized), 200
 
-# Configura el planificador de tareas de fondo
-scheduler = BackgroundScheduler(daemon=True)
-scheduler.start()
+@app.route('/get-appointment-email/<email>/<selectedDate>/<peluqueroId>', methods=['GET'])
+def get_appointment_email(email, selectedDate, peluqueroId):
+    try:
+        selected_date_obj = datetime.datetime.strptime(selectedDate, '%a %b %d %Y %H:%M:%S GMT%z (hora estándar de Argentina)')
+    except ValueError:
+        return jsonify(message='Invalid date format'), 400
+
+    formatted_selected_date = selected_date_obj.strftime('%Y-%m-%d')
+
+    # Verificar si alguien ya tomó un turno con el mismo correo electrónico en el mismo día y para el mismo peluquero
+    appointment_exists = Appointment.query.filter_by(email=email, peluquero=peluqueroId, date=formatted_selected_date).first()
+
+    if appointment_exists:
+        # Si existe un turno para el correo electrónico y fecha específicos, devolver True
+        return jsonify(appointment_taken=True), 200
+    else:
+        # Si no hay un turno para el correo electrónico y fecha específicos, devolver False
+        return jsonify(appointment_taken=False), 200
+
+
 
 def send_reminders():
     # Obtén la fecha de mañana
