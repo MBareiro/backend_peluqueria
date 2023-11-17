@@ -2,15 +2,21 @@ from app import app, db
 from models.horario_model import Horario, HorarioSchema
 from flask import Flask, request, jsonify
 
+from tenacity import retry, stop_after_attempt, wait_fixed
 """ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///horarios.db' """
 
 horario_schema = HorarioSchema()
 horarios_schema = HorarioSchema(many=True)
+# Configura la estrategia de reintento
+retry_strategy = retry(
+    stop=stop_after_attempt(3),  # Intenta 3 veces como máximo
+    wait=wait_fixed(2)  # Espera 5 segundos entre reintentos
+)
 
 @app.route('/guardar_horarios', methods=['POST'])
+@retry_strategy
 def guardar_horarios():
     data = request.json  # Recibe los datos del frontend
-    print(data)
     for dia, horario_data in data.items():
         horario = Horario.query.filter_by(dia=dia, userId=horario_data['userId']).first()
         if horario:
@@ -40,6 +46,7 @@ def guardar_horarios():
     return jsonify({'message': 'Horarios guardados exitosamente'})
 
 @app.route('/obtener_horario_usuario/<user_id>', methods=['GET'])
+@retry_strategy
 def obtener_horario_usuario(user_id):
     horarios = Horario.query.filter_by(userId=user_id).all()
     horarios_data = {horario.dia: horario_schema.dump(horario) for horario in horarios}

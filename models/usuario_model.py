@@ -22,6 +22,10 @@ class Usuario(db.Model, UserMixin):
     telefono = db.Column(db.String(100))
     role = db.Column(db.String(20), nullable=False)
     active = db.Column(db.Boolean, default=True)
+    # Agrega la relación en la clase Usuario
+    horarios = db.relationship('Horario', back_populates='usuario', lazy='dynamic')
+    turnos = db.relationship('Appointment', back_populates='usuario')    
+    dias_bloqueados = db.relationship('BlockedDay', back_populates='usuario')
 
     def __init__(self, nombre, apellido, direccion, password, email, telefono, role, active=True):
         self.nombre = nombre

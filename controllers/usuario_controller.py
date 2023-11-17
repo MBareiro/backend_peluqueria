@@ -1,39 +1,14 @@
 import secrets
 import string
-from app import app, db
-from models.usuario_model import Usuario, UsuarioSchema
-from flask import jsonify, request
 import bcrypt
-from flask_login import login_user
-from flask_login import login_required, logout_user
+from flask import jsonify, request
+from app import db
+from models.usuario_model import Usuario, UsuarioSchema
 from controllers.email_controller import *
 from tenacity import retry, stop_after_attempt, wait_fixed
-app.config['UPLOAD_FOLDER'] = '/img'
 
 usuario_schema = UsuarioSchema()
 usuarios_schema = UsuarioSchema(many=True)
-
-@app.route('/usuarios/login', methods=['POST'])
-def login():
-    email = request.json.get('email')
-    password = request.json.get('password')
-    print(email)
-    print(password)
-    if not email or not password:
-        return jsonify({'message': 'Por favor, proporciona correo electrónico y contraseña'}), 400
-
-    usuario = Usuario.verificar_credenciales(email, password)
-    if usuario:
-        login_user(usuario)  # Iniciar sesión al usuario
-        return jsonify({'message': 'Inicio de sesión exitoso', 'usuario': usuario_schema.dump(usuario)})
-    else:
-        return jsonify({'message': 'Credenciales incorrectas'}), 401
-
-@app.route('/usuarios/logout', methods=['POST'])
-@login_required
-def logout():
-    logout_user()  # Cerrar la sesión del usuario
-    return jsonify({'message': 'Sesión cerrada exitosamente'})
 
 # Configura la estrategia de reintento
 retry_strategy = retry(
@@ -54,6 +29,7 @@ def get_usuarios():
 
 
 @app.route('/usuarios/<id>', methods=['GET'])
+@retry_strategy
 def get_usuario(id):
     usuario = Usuario.query.get(id)
     return usuario_schema.jsonify(usuario)
@@ -120,7 +96,6 @@ def update_usuario(id):
 
     db.session.commit()
     return usuario_schema.jsonify(usuario)
-
 
 
 @app.route('/usuarios/change-password/<int:id>', methods=['POST'])

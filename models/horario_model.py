@@ -1,5 +1,4 @@
 from app import db, app, ma
-
 class HorarioSchema(ma.Schema):
     class Meta:
         fields = ('id', 'dia', 'active_morning', 'morning_start', 'morning_end', 'active_afternoon', 'afternoon_start', 'afternoon_end', 'userId')
@@ -13,7 +12,8 @@ class Horario(db.Model):
     active_afternoon = db.Column(db.Boolean)
     afternoon_start = db.Column(db.String(8))
     afternoon_end = db.Column(db.String(8))
-    userId = db.Column(db.Integer)
+    userId = db.Column(db.Integer, db.ForeignKey('usuario.id'))
+    usuario = db.relationship('Usuario', back_populates='horarios')    
 
     
 with app.app_context():

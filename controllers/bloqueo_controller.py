@@ -42,7 +42,6 @@ def create_blocked_day_range():
     return jsonify({'message': 'Días bloqueados con éxito'}, 201)
 
 
-
 @app.route('/get-blocked-days/<int:user_id>', methods=['GET'])
 def get_blocked_days(user_id):
     blocked_days = BlockedDay.query.filter_by(user_id=user_id).all()
@@ -58,8 +57,7 @@ def get_blocked_days(user_id):
 def delete_blocked_day():
     data = request.json
     user_id = data.get('user_id')
-    print("userID", user_id)
-    
+        
     if user_id is None:
         return jsonify({'message': 'El campo "user_id" es obligatorio'}), 400
     
@@ -73,6 +71,5 @@ def delete_blocked_day():
     for blocked_day in existing_blocked_days:
         db.session.delete(blocked_day)
     
-    db.session.commit()
-    
+    db.session.commit()    
     return jsonify({'message': 'Días bloqueados eliminados con éxito'}, 200)

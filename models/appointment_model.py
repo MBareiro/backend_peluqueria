@@ -11,10 +11,11 @@ class Appointment(db.Model):
     last_name = db.Column(db.String(100))
     email = db.Column(db.String(100))
     phone_number = db.Column(db.String(15))
-    peluquero = db.Column(db.String(100))
+    peluquero = db.Column(db.Integer, db.ForeignKey('usuario.id'))
     date = db.Column(db.String(20))
     schedule = db.Column(db.String(20))
     selectedRadio = db.Column(db.String(10))
+    usuario = db.relationship('Usuario', back_populates='turnos')
 
     def __init__(self, first_name, last_name, email, phone_number, peluquero, date, schedule, selectedRadio):
         self.first_name = first_name

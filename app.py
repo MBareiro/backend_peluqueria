@@ -7,8 +7,10 @@ from flask_login import LoginManager
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '7110c8ae51a4b5af97be6534caef90e4bb9bdcb3380af008f90b23a5d1616bf319bc298105da20fe'
+
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
+
 CORS(app)
 
 # Configurar la base de datos
@@ -38,13 +40,15 @@ from controllers.reset_password import *
 
 # Descomentar en pythonanywhere 
 
-from controllers import usuario_controller, horario_controller, appointment_controller, bloqueo_controller
+from controllers import usuario_controller, horario_controller, appointment_controller, bloqueo_controller, login_controller
 app.route('/usuarios', methods=['GET'])(usuario_controller.get_usuarios)
 app.route('/usuarios/<id>', methods=['GET'])(usuario_controller.get_usuario)
 app.route('/usuarios/<id>', methods=['DELETE'])(usuario_controller.delete_usuario)
 app.route('/usuarios', methods=['POST'])(usuario_controller.create_usuario)
 app.route('/usuarios/<id>', methods=['PUT'])(usuario_controller.update_usuario)
-app.route('/usuarios/login', methods=['POST'])(usuario_controller.login)
+
+app.route('/login', methods=['POST'])(login_controller.login)
+app.route('/logout', methods=['POST'])(login_controller.login)
 
 app.route('/obtener_horario_usuario/<user_id>', methods=['GET'])(horario_controller.obtener_horario_usuario)
 app.route('/guardar_horarios', methods=['POST'])(horario_controller.guardar_horarios)
@@ -54,6 +58,7 @@ app.route('/get-morning-appointments', methods=['GET'])(appointment_controller.g
 app.route('/get-selected-appointments/<selectedTime>/<peluqueroId>/<selectedDate>', methods=['GET'])(appointment_controller.get_selected_appointments)
 app.route('/confirm-appointment', methods=['POST'])(appointment_controller.confirm_appointment)
 app.route('/cancel-appointment/<appointment_id>', methods=['DELETE'])(appointment_controller.cancel_appointment)
+app.route('/cancel-all-appointment', methods=['DELETE'])(appointment_controller.cancel_all_appointments)
 app.route('/get-specific-appointments/<selectedTime>/<selectedDate>/<peluqueroId>', methods=['GET'])(appointment_controller.get_specific_appointments)
 app.route('/get-appointment-email/<email>/<selectedDate>/<peluqueroId>', methods=['GET'])(appointment_controller.get_appointment_email)
 

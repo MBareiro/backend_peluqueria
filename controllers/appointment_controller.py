@@ -1,16 +1,17 @@
 import random
 from app import app, db
 from models.appointment_model import Appointment, AppointmentSchema
-from flask import Flask, request, jsonify
-from sqlalchemy import desc, asc  # Importa desc para el ordenamiento descendente
+from flask import request, jsonify
+from sqlalchemy import asc  # Importa desc para el ordenamiento descendente
 from controllers.email_controller import *
-from flask import Flask, request, render_template
+from flask import request
 from dateutil import parser
 from dateutil.parser import parse
-import requests
 from tenacity import retry, stop_after_attempt, wait_fixed
 from apscheduler.schedulers.background import BackgroundScheduler
 import datetime
+from flask_login import current_user, login_required
+
 # Configura el planificador de tareas de fondo
 scheduler = BackgroundScheduler(daemon=True)
 scheduler.start()
@@ -20,6 +21,12 @@ appointment_schema = AppointmentSchema()
 appointment_schema = AppointmentSchema(many=True)
 confirmation_codes = {}
 
+# Configura la estrategia de reintento
+retry_strategy = retry(
+    stop=stop_after_attempt(3),  # Intenta 3 veces como máximo
+    wait=wait_fixed(2)  # Espera 5 segundos entre reintentos
+)
+
 # Nueva ruta para obtener los turnos
 @app.route('/get-appointments', methods=['GET'])
 def get_appointments():
@@ -28,12 +35,16 @@ def get_appointments():
     appointments = appointment_schema.dump(all_appointments)
     return jsonify(appointments), 200
 
+
 @app.route('/get-morning-appointments', methods=['GET'])
 def get_morning_appointments():
     # Obtiene todos los turnos de la mañana desde la base de datos
-    morning_appointments = Appointment.query.filter_by(schedule="morning").all()
-    morning_appointments_serialized = appointment_schema.dump(morning_appointments)
+    morning_appointments = Appointment.query.filter_by(
+        schedule="morning").all()
+    morning_appointments_serialized = appointment_schema.dump(
+        morning_appointments)
     return jsonify(morning_appointments_serialized), 200
+
 
 @app.route('/get-selected-appointments/<selectedTime>/<peluqueroId>/<selectedDate>', methods=['GET'])
 def get_selected_appointments(selectedTime, peluqueroId, selectedDate):
@@ -41,18 +52,23 @@ def get_selected_appointments(selectedTime, peluqueroId, selectedDate):
         return jsonify(message='Invalid selected time'), 400
 
     # Filtrar los turnos según el tiempo seleccionado (mañana o tarde)
-    filtered_appointments = Appointment.query.filter_by(schedule=selectedTime, peluquero=peluqueroId, date=selectedDate)
+    filtered_appointments = Appointment.query.filter_by(
+        schedule=selectedTime, peluquero=peluqueroId, date=selectedDate)
     # Ordena los turnos según la columna selectedRadio en orden descendente
-    filtered_appointments = filtered_appointments.order_by(asc(Appointment.selectedRadio))  # Corrección: usar 'desc' para ordenar descendente
+    filtered_appointments = filtered_appointments.order_by(asc(
+        Appointment.selectedRadio))  # Corrección: usar 'desc' para ordenar descendente
     filtered_appointments = filtered_appointments.all()
-    filtered_appointments_serialized = appointment_schema.dump(filtered_appointments)
+    filtered_appointments_serialized = appointment_schema.dump(
+        filtered_appointments)
     return jsonify(filtered_appointments_serialized), 200
-    
+
 # Ruta para confirmar el código de confirmación
+
+
 @app.route('/confirm-appointment', methods=['POST'])
 def confirm_appointment():
     if not request.is_json:
-        return jsonify({'message': 'Invalid request, JSON expected'}), 400     
+        return jsonify({'message': 'Invalid request, JSON expected'}), 400
 
     data = request.json
     email = data.get('email')
@@ -66,10 +82,12 @@ def confirm_appointment():
         return jsonify({'message': 'Código de confirmación incorrecto'}, 400)
 
 # Función para crear un turno
+
+
 @app.route('/create-appointment', methods=['POST'])
 def create_appointment():
     if not request.is_json:
-        return jsonify({'message': 'Invalid request, JSON expected'}), 400     
+        return jsonify({'message': 'Invalid request, JSON expected'}), 400
 
     data = request.json
     date_str = data.get('date')
@@ -77,7 +95,7 @@ def create_appointment():
 
     if date_obj is None:
         return jsonify({'message': 'Fecha y hora no válidas'}, 400)
-    
+
     first_name = data.get('firstName')
     last_name = data.get('lastName')
     email = data.get('email')
@@ -100,30 +118,35 @@ def create_appointment():
 
     db.session.add(new_submission)
     db.session.commit()
-    if(email):
+    if (email):
         appointment_id = new_submission.id
-        cancel_url = f'https://turnopro-frontend.web.app/cancel-appointment/{appointment_id}'    
+        cancel_url = f'https://turnopro-frontend.web.app/cancel-appointment/{appointment_id}'
         """ cancel_url = f'http://localhost:4200/cancel-appointment/{appointment_id}' """
-        msg = Message('Turno registrado!', sender='tu_email@example.com', recipients=[email])
+        msg = Message('Turno registrado!',
+                      sender='tu_email@example.com', recipients=[email])
         msg.body = f'Tu turno ha sido registrado para el {formatted_date} a las {selectedRadio}. Si deseas cancelar tu turno (hasta un día antes del turno programado), haz clic en el siguiente enlace: {cancel_url}'
-        mail.send(msg)    
-    
+        mail.send(msg)
+
     return jsonify({'message': 'Turno confirmado con éxito'}, 200)
-    
+
+
 def generate_confirmation_code():
     return str(random.randint(1000, 9999))
 
 # Ruta para enviar un código de confirmación
+
+
 @app.route('/send-confirmation-code', methods=['POST'])
 def send_confirmation_code():
     if not request.is_json:
-        return jsonify({'message': 'Invalid request, JSON expected'}), 400     
+        return jsonify({'message': 'Invalid request, JSON expected'}), 400
 
     data = request.json
     email = data.get('email')
     confirmation_code = generate_confirmation_code()
     confirmation_codes[email] = confirmation_code
-    msg = Message('Código de confirmación', sender='tu_email@example.com', recipients=[email])
+    msg = Message('Código de confirmación',
+                  sender='tu_email@example.com', recipients=[email])
     msg.body = f'Tu código de confirmación es: {confirmation_code}'
     # Envía el correo electrónico con el código de confirmación
     mail.send(msg)
@@ -137,12 +160,15 @@ def format_iso_date(date_str):
     except ValueError:
         return None
 
+# ------------------------------------
+
+
 @app.route('/cancel-appointment/<appointment_id>', methods=['DELETE'])
 def cancel_appointment(appointment_id):
     appointment = Appointment.query.get(appointment_id)
     if appointment:
         # Obtén la fecha actual
-        current_date = datetime.now().date()
+        current_date = datetime.datetime.now().date()
         # Convierte la fecha del turno al formato datetime
         appointment_date = parse(appointment.date).date()
         # Calcula la diferencia de días entre la fecha actual y la fecha del turno
@@ -156,11 +182,25 @@ def cancel_appointment(appointment_id):
             return jsonify({'message': 'No se puede cancelar el turno con menos de un día de anticipación'}), 400
     else:
         return jsonify({'message': 'No se encontró el turno'}), 404
- 
+
+
+@app.route('/user-cancel-appointment/<appointment_id>', methods=['DELETE'])
+def user_cancel_appointment(appointment_id):
+    appointment = Appointment.query.get(appointment_id)
+    if appointment:
+        # Usuario autenticado
+        db.session.delete(appointment)
+        db.session.commit()
+        return jsonify({'message': 'Turno cancelado exitosamente'}), 200
+    else:
+        return jsonify({'message': 'No se encontró el turno'}), 404
+
+
 @app.route('/cancel-appointments', methods=['DELETE'])
+@retry_strategy
 def cancel_appointments_in_date_range():
     data = request.get_json()
-    
+
     if 'from_date' not in data or 'to_date' not in data or 'peluquero_id' not in data:
         return jsonify({'message': 'Los campos "from_date", "to_date" y "peluquero_id" son obligatorios'}), 400
 
@@ -179,7 +219,7 @@ def cancel_appointments_in_date_range():
 
     # Obtén la fecha actual
     current_date = datetime.datetime.now().date()
-    
+
     # Consulta los turnos dentro del rango de fechas y del peluquero especificado
     appointments_to_cancel = Appointment.query.filter(
         Appointment.date >= from_date,
@@ -188,55 +228,74 @@ def cancel_appointments_in_date_range():
     ).all()
 
     for appointment in appointments_to_cancel:
-        print(appointment.email)
-        if(appointment.email):
+        if (appointment.email):
             # Puedes agregar aquí la lógica para enviar notificaciones por correo electrónico, si es necesario.
-            msg = Message('Notificación de cancelación de turno', sender='tu_email@example.com', recipients=[appointment.email])
+            msg = Message('Notificación de cancelación de turno',
+                          sender='tu_email@example.com', recipients=[appointment.email])
             msg.body = f'Tu turno programado para el {appointment.date} a las {appointment.selectedRadio} ha sido cancelado por razones de fuerza mayor. Disculpe las molestias.'
             mail.send(msg)
         db.session.delete(appointment)
     db.session.commit()
     return jsonify({'message': 'Turnos del peluquero cancelados exitosamente en el rango de fechas'}), 200
 
-# Configura la estrategia de reintento
-retry_strategy = retry(
-    stop=stop_after_attempt(3),  # Intenta 3 veces como máximo
-    wait=wait_fixed(2)  # Espera 5 segundos entre reintentos
-)
+@app.route('/cancel-all-appointments', methods=['DELETE'])
+def cancel_all_appointments():
+    data = request.get_json()
+
+    # Obtén todos los turnos del peluquero
+    appointments = Appointment.query.all()
+
+    # Elimina todos los turnos
+    for appointment in appointments:
+        db.session.delete(appointment)
+
+    # Realiza la confirmación de todas las eliminaciones
+    db.session.commit()
+    return jsonify({'message': 'Turnos cancelados exitosamente'}), 200
+
+
 
 @app.route('/get-specific-appointments/<selectedTime>/<selectedDate>/<peluqueroId>', methods=['GET'])
 @retry_strategy
 def get_specific_appointments(selectedTime, selectedDate, peluqueroId):
     # Convertir la fecha recibida a un objeto datetime
     try:
-        selected_date_obj = datetime.datetime.strptime(selectedDate, '%a %b %d %Y %H:%M:%S GMT%z (hora estándar de Argentina)')
+        selected_date_obj = datetime.datetime.strptime(
+            selectedDate, '%a %b %d %Y %H:%M:%S GMT%z (hora estándar de Argentina)')
     except ValueError:
         return jsonify(message='Invalid date format'), 400
 
     # Formatear la fecha en el mismo formato que tienes en la base de datos
     formatted_selected_date = selected_date_obj.strftime('%Y-%m-%d')
     # Filtrar los turnos según el tiempo seleccionado (mañana o tarde) y la fecha
-    filtered_appointments = Appointment.query.filter_by(schedule=selectedTime, peluquero=peluqueroId, date=formatted_selected_date)
+    filtered_appointments = Appointment.query.filter_by(
+        schedule=selectedTime, peluquero=peluqueroId, date=formatted_selected_date)
     # Ordenar los turnos según la columna selectedRadio en orden descendente
-    filtered_appointments = filtered_appointments.order_by(asc(Appointment.selectedRadio))
+    filtered_appointments = filtered_appointments.order_by(
+        asc(Appointment.selectedRadio))
     # Seleccionar solo el campo 'selectedRadio' de los turnos
-    filtered_appointments = filtered_appointments.with_entities(Appointment.selectedRadio).all()
+    filtered_appointments = filtered_appointments.with_entities(
+        Appointment.selectedRadio).all()
     # Serializar los selectedRadios
-    filtered_appointments_serialized = [item[0] for item in filtered_appointments]
+    filtered_appointments_serialized = [item[0]
+                                        for item in filtered_appointments]
     print(filtered_appointments_serialized)
     return jsonify(filtered_appointments_serialized), 200
+
 
 @app.route('/get-appointment-email/<email>/<selectedDate>/<peluqueroId>', methods=['GET'])
 def get_appointment_email(email, selectedDate, peluqueroId):
     try:
-        selected_date_obj = datetime.datetime.strptime(selectedDate, '%a %b %d %Y %H:%M:%S GMT%z (hora estándar de Argentina)')
+        selected_date_obj = datetime.datetime.strptime(
+            selectedDate, '%a %b %d %Y %H:%M:%S GMT%z (hora estándar de Argentina)')
     except ValueError:
         return jsonify(message='Invalid date format'), 400
 
     formatted_selected_date = selected_date_obj.strftime('%Y-%m-%d')
 
     # Verificar si alguien ya tomó un turno con el mismo correo electrónico en el mismo día y para el mismo peluquero
-    appointment_exists = Appointment.query.filter_by(email=email, peluquero=peluqueroId, date=formatted_selected_date).first()
+    appointment_exists = Appointment.query.filter_by(
+        email=email, peluquero=peluqueroId, date=formatted_selected_date).first()
 
     if appointment_exists:
         # Si existe un turno para el correo electrónico y fecha específicos, devolver True
@@ -246,30 +305,35 @@ def get_appointment_email(email, selectedDate, peluqueroId):
         return jsonify(appointment_taken=False), 200
 
 
-
 def send_reminders():
     # Obtén la fecha de mañana
     tomorrow = datetime.datetime.now() + datetime.timedelta(days=1)
     formatted_date = tomorrow.strftime('%Y-%m-%d')
 
     # Filtra los turnos que tienen la fecha de mañana
-    tomorrow_appointments = Appointment.query.filter_by(date=formatted_date).all()
+    tomorrow_appointments = Appointment.query.filter_by(
+        date=formatted_date).all()
 
     for appointment in tomorrow_appointments:
-        send_reminder_email(appointment)  # Envia un correo de recordatorio para cada turno
+        # Envia un correo de recordatorio para cada turno
+        send_reminder_email(appointment)
 
     return jsonify({'message': 'Recordatorios enviados con éxito'}), 200
+
 
 def send_reminder_email(appointment):
     # Aquí deberías implementar la lógica para enviar un correo de recordatorio al usuario
     # Puedes utilizar bibliotecas como Flask-Mail o cualquier otro servicio de correo electrónico.
 
     # Ejemplo usando Flask-Mail
-    msg = Message('Recordatorio de turno', sender='tu_email@example.com', recipients=[appointment.email])
+    msg = Message('Recordatorio de turno',
+                  sender='tu_email@example.com', recipients=[appointment.email])
     msg.body = f'Tu turno está programado para mañana a las {appointment.selectedRadio}. ¡No olvides asistir!'
     mail.send(msg)
 
 # Programa la tarea para ejecutarse un día antes del turno
+
+
 def schedule_reminders():
     # Calcula la fecha actual
     today = datetime.datetime.now().date()
