@@ -38,6 +38,7 @@ def get_usuario(id):
 @app.route('/usuarios/<id>', methods=['DELETE'])
 def delete_usuario(id):
     usuario = Usuario.query.get(id)
+    print(usuario)
     db.session.delete(usuario)
     db.session.commit()
     return usuario_schema.jsonify(usuario)
